@@ -33,7 +33,7 @@ abstract class Relay {
   protected async configure() {
     // TODO: add 'resource' - 'domain' to ISignalWireOptions interface
     // @ts-ignore
-    const { resource = 'swire', domain = 'dev.swire.io' } = this.session.options
+    const { resource = 'chris', domain = 'dev-123456.sip.swire.io' } = this.session.options
     const msg = new Execute({ protocol: this.protocol, method: 'configure', params: { resource, domain } })
     await this.session.execute(msg)
   }

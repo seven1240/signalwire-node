@@ -188,8 +188,8 @@ function makeCall() {
     destinationNumber: document.getElementById('number').value,
     remoteCallerName: 'Joe Example',
     remoteCallerNumber: 'joe@example.com',
-    callerName: 'J. Smith',
-    callerNumber: 'smith@example.com',
+    callerName: 'Chris Rienzo',
+    callerNumber: 'chris@dev-123456.sip.swire.io',
 
     // Optional:
     // localStream: MediaStream, // Use this stream instead of retrieving a new one. Useful if you have a stream from a canvas.captureStream() or from a screen share extension.
