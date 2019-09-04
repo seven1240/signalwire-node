@@ -6,10 +6,44 @@
 <body>
 <h1>Agora Relay Demo</h1>
 
-<input type="text" id="dest" value="1234">
+Agora App ID:<input type="text" id="appid" size="40"><br>
+Agora Channel:<input type="text" id="channel"><br>
+To Number: <input type="text" id="to" value="1234">
+
 <button onclick="makeCall()">Call</button>
 
+<hr>
+
+<div id="output"></div>
+
 <script type="text/javascript">
+	var appid = localStorage.getItem("appid");
+	var to = localStorage.getItem("to");
+	var channel = localStorage.getItem("channel");
+
+	if (appid) {
+		document.getElementById("appid").value = appid;
+	}
+
+	if (channel) {
+		document.getElementById("channel").value = channel;
+	}
+
+	if (to) {
+		document.getElementById("to").value = to;
+	}
+
+	document.getElementById("appid").addEventListener('change', save, false);
+	document.getElementById("channel").addEventListener('change', save, false);
+	document.getElementById("to").addEventListener('change', save, false);
+
+	function save(e) {
+		console.log(e.target.id, "changed")
+		var target = e.target.id;
+		var value = e.target.value;
+		localStorage.setItem(target, value);
+	}
+
 	// start from here
 	// fetch port from backend via http ...
 
@@ -31,27 +65,45 @@
 
 		socket.onopen = function(msg) {
 			console.log("connected", address);
+			log("connected")
 			isConnected = true;
 		}
 
 		socket.onclose = function(msg) {
 			console.log("socket closed");
 			isConnected = false;
+			log("disconnected")
 		}
 
 		socket.onmessage = function(msg) {
-			console.log("I just got reply from server!: " + msg.data);
+			console.log("received: " + msg.data);
+
+			var data = JSON.parse(msg.data);
+
+			if (data.error) {
+				log(data.error);
+			} else if (data.msg) {
+				log(data.msg);
+			}
 		}
 	})
 
+	function log(s) {
+		document.getElementById('output').append(s)
+		var br = document.createElement("br");
+		document.getElementById('output').appendChild(br)
+	}
 
 	function makeCall() {
-		var dest = document.getElementById('dest').value;
-		console.log("calling", dest);
+		var to = document.getElementById('to').value;
+		console.log("calling", to);
+		log("calling")
 
 		var cmd = {
 			method: "call",
-			destNubmer: dest
+			appid: document.getElementById("appid").value,
+			channel: document.getElementById("channel").value,
+			to: to
 		}
 
 		socket.send(JSON.stringify(cmd));

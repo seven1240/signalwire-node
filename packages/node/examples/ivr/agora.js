@@ -31,6 +31,7 @@ const consumer = new RelayConsumer({
 
   contexts: ['agora'],
   ready: async ({ client }) => {
+    console.log("Client Ready");
     myClient = client;
   },
   teardown: (consumer) => {
@@ -91,8 +92,7 @@ wss.on('connection', function connection(ws, req) {
       const cmd = JSON.parse(message)
 
       if (cmd.method == "call") {
-        makeCall(cmd)
-
+        makeCall(cmd, ws)
       }
     } catch (e) {
       console.error("parse error:", e)
@@ -100,15 +100,24 @@ wss.on('connection', function connection(ws, req) {
   })
 })
 
-async function makeCall(cmd) {
+async function makeCall(cmd, ws) {
   console.log("relay call", cmd)
 
-  // const { successful: dialed, call } = await myClient.calling.dial({ type: 'agora', from: '+1xxx', to: '+1yyy' })
-  const { successful: dialed, call } = await myClient.calling.dial({ type: 'phone', from: '+1xxx', to: '+1yyy' })
+  var call_params = { type: 'agora', appid: cmd.appid, channel: cmd.channel, from: 'agora', to: cmd.to };
 
-  const leg = call;
+  // to help pass hagrid
+  call_params = { type: 'phone', from: '+18990000000', to: "+18990007777", appid: cmd.appid, channel: cmd.channel };
 
-  leg.on('created', call => {
+  const { successful: dialed, call } = await myClient.calling.dial(call_params)
+
+  if (!dialed) {
+    console.error('Dial error!')
+    var err = {error: "dial error"}
+    ws.send(JSON.stringify(err))
+    return
+  }
+
+  call.on('created', call => {
     console.log(`\t ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
   })
   .on('ringing', call => {
@@ -122,10 +131,11 @@ async function makeCall(cmd) {
   })
   .on('ended', call => {
     console.log(`\t ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
-    _init()
+    const msg = {msg: "call ended"};
+    ws.send(JSON.stringify(msg));
   })
 
-  leg.on('disconnected', call => {
+  call.on('disconnected', call => {
     console.log(`\t ${call.id} has been disconnected!`, '\n')
   })
   .on('connecting', call => {
@@ -138,16 +148,37 @@ async function makeCall(cmd) {
     console.log(`\t ${call.id} failed to connect!`, '\n')
   })
 
-  leg.on('record.recording', params => {
+  call.on('record.recording', params => {
     console.log(`\t Record state changed for ${params.call_id} in ${params.state} - ${params.control_id}`)
   })
-  leg.on('record.paused', params => {
+  .on('record.paused', params => {
     console.log(`\t Record state changed for ${params.call_id} in ${params.state} - ${params.control_id}`)
   })
-  leg.on('record.finished', params => {
+  .on('record.finished', params => {
     console.log(`\t Record state changed for ${params.call_id} in ${params.state} - ${params.control_id}`)
   })
-  leg.on('record.no_input', params => {
+  .on('record.no_input', params => {
     console.log(`\t Record state changed for ${params.call_id} in ${params.state} - ${params.control_id}`)
   })
+
+
+  if (call.state == "answered") {
+    console.log("call answered");
+    const msg = {msg: "agora answered, calling to " + call_params.to};
+    ws.send(JSON.stringify(msg));
+
+    tts = false
+
+    if (tts) {
+      await call.playTTS({ text: "Good good. Thank you, bye"} );
+      await call.hangup();
+    } else {
+      const connect_params = { type: 'phone', from: call_params.from, to: call_params.to};
+      // const domain = "dev-seven.sip.swire.io";
+      // const connect_params = { type: 'sip', params: {from: "1000@" + domain, to: "1002@" + domain, timeout: 30}};
+      console.log("connecting to", connect_params);
+      await call.connect(connect_params);
+    }
+  }
+
 }

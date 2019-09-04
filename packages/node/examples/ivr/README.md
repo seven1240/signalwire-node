@@ -18,8 +18,8 @@ PSTN                    |
   |                     | (SDK/websocket)
 Signalwire Platform <---------------------> Agora Demo Server
   |                     |                    |
-  |                     |                    |(websocket)
-  +-- SIP Phone         |                    +---- Agora SDK (Mobile Client)
+  |                     |                    |(websocket/http/)
+  +-- SIP Phone         |                    +---- Agora SDK (Mobile/PC)
 ```
 
 * Signalwire Platform with Relay API
