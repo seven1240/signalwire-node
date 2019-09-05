@@ -177,13 +177,13 @@ async function makeCall(cmd, ws) {
       // const domain = "dev-seven.sip.swire.io";
       // const connect_params = { type: 'sip', params: {from: "1000@" + domain, to: "1002@" + domain, timeout: 30}};
       console.log("connecting to", connect_params);
-      const { successful, event, call2 } = await call.connect(connect_params);
+      const { successful: connected, event: callEvent, call: call2 } = await call.connect(connect_params);
 
-      console.log("successful", successful);
-      console.log("event", event);
+      console.log("successful", connected);
+      console.log("event", callEvent);
       console.log("call2", call2);
 
-      if (!successful) {
+      if (!connected) {
         console.log("call failed", connect_params);
         const msg = {msg: "call failed when connecting to " + connect_params.to};
         ws.send(JSON.stringify(msg));
