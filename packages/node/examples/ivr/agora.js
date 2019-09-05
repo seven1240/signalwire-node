@@ -202,37 +202,38 @@ async function makeCall(cmd, ws) {
       // so far so good, bleg
 
       call2.on('created', call => {
-        console.log(`\t ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
+        console.log(`\tb ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
       }).on('ringing', call => {
-        console.log(`\t ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
+        console.log(`\tb ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
       }).on('answered', call => {
-        console.log(`\t ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
+        console.log(`\tb ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
       }).on('ending', call => {
-        console.log(`\t ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
+        console.log(`\tb ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
       }).on('ended', call => {
-        console.log(`\t ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
-        const msg = {msg: "call ended"};
+        console.log(`\tb ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
+        call.hangup()
+        const msg = {msg: "call bleg ended"};
         ws.send(JSON.stringify(msg));
       })
 
       call2.on('disconnected', call => {
-        console.log(`\t ${call.id} has been disconnected!`, '\n')
+        console.log(`\tb ${call.id} has been disconnected!`, '\n')
       }).on('connecting', call => {
-        console.log(`\t ${call.id} trying to connecting..`, '\n')
+        console.log(`\tb ${call.id} trying to connecting..`, '\n')
       }).on('connected', call => {
-        console.log(`\t ${call.id} has been connected with ${call.peer.id}!`, '\n')
+        console.log(`\tb ${call.id} has been connected with ${call.peer.id}!`, '\n')
       }).on('failed', call => {
-        console.log(`\t ${call.id} failed to connect!`, '\n')
+        console.log(`\tb ${call.id} failed to connect!`, '\n')
       })
 
       call2.on('record.recording', params => {
-        console.log(`\t Record state changed for ${params.call_id} in ${params.state} - ${params.control_id}`)
+        console.log(`\tb Record state changed for ${params.call_id} in ${params.state} - ${params.control_id}`)
       }).on('record.paused', params => {
-        console.log(`\t Record state changed for ${params.call_id} in ${params.state} - ${params.control_id}`)
+        console.log(`\tb Record state changed for ${params.call_id} in ${params.state} - ${params.control_id}`)
       }).on('record.finished', params => {
-        console.log(`\t Record state changed for ${params.call_id} in ${params.state} - ${params.control_id}`)
+        console.log(`\tb Record state changed for ${params.call_id} in ${params.state} - ${params.control_id}`)
       }).on('record.no_input', params => {
-        console.log(`\t Record state changed for ${params.call_id} in ${params.state} - ${params.control_id}`)
+        console.log(`\tb Record state changed for ${params.call_id} in ${params.state} - ${params.control_id}`)
       })
     }
   }
