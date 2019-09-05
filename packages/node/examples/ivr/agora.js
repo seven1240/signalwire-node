@@ -177,7 +177,63 @@ async function makeCall(cmd, ws) {
       // const domain = "dev-seven.sip.swire.io";
       // const connect_params = { type: 'sip', params: {from: "1000@" + domain, to: "1002@" + domain, timeout: 30}};
       console.log("connecting to", connect_params);
-      await call.connect(connect_params);
+      const { successful, event, call2 } = await call.connect(connect_params);
+
+      console.log("successful", successful);
+      console.log("event", event);
+      console.log("call2", call2);
+
+      if (!successful) {
+        console.log("call failed", connect_params);
+        const msg = {msg: "call failed when connecting to " + connect_params.to};
+        ws.send(JSON.stringify(msg));
+        call.hangup();
+        return;
+      }
+
+      if (!call2) {
+        console.error("WTF?");
+        const msg = {msg: "call failed when connecting to " + connect_params.to};
+        ws.send(JSON.stringify(msg));
+        call.hangup();
+        return;
+      }
+
+      // so far so good, bleg
+
+      call2.on('created', call => {
+        console.log(`\t ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
+      }).on('ringing', call => {
+        console.log(`\t ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
+      }).on('answered', call => {
+        console.log(`\t ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
+      }).on('ending', call => {
+        console.log(`\t ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
+      }).on('ended', call => {
+        console.log(`\t ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
+        const msg = {msg: "call ended"};
+        ws.send(JSON.stringify(msg));
+      })
+
+      call2.on('disconnected', call => {
+        console.log(`\t ${call.id} has been disconnected!`, '\n')
+      }).on('connecting', call => {
+        console.log(`\t ${call.id} trying to connecting..`, '\n')
+      }).on('connected', call => {
+        console.log(`\t ${call.id} has been connected with ${call.peer.id}!`, '\n')
+      }).on('failed', call => {
+        console.log(`\t ${call.id} failed to connect!`, '\n')
+      })
+
+      call2.on('record.recording', params => {
+        console.log(`\t Record state changed for ${params.call_id} in ${params.state} - ${params.control_id}`)
+      }).on('record.paused', params => {
+        console.log(`\t Record state changed for ${params.call_id} in ${params.state} - ${params.control_id}`)
+      }).on('record.finished', params => {
+        console.log(`\t Record state changed for ${params.call_id} in ${params.state} - ${params.control_id}`)
+      }).on('record.no_input', params => {
+        console.log(`\t Record state changed for ${params.call_id} in ${params.state} - ${params.control_id}`)
+      })
     }
   }
 
