@@ -179,7 +179,7 @@ async function makeCall(cmd, ws) {
       console.log("connecting to", connect_params);
       const { successful: connected, event: callEvent, call: call2 } = await call.connect(connect_params);
 
-      console.log("successful", connected);
+      console.log("connected", connected);
       console.log("event", callEvent);
       console.log("call2", call2);
 
@@ -201,6 +201,11 @@ async function makeCall(cmd, ws) {
 
       // so far so good, bleg
 
+      {
+        const msg = {msg: "call bleg answered"};
+        ws.send(JSON.stringify(msg));
+      }
+
       call2.on('created', call => {
         console.log(`\tb ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
       }).on('ringing', call => {
@@ -209,9 +214,9 @@ async function makeCall(cmd, ws) {
         console.log(`\tb ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
       }).on('ending', call => {
         console.log(`\tb ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
-      }).on('ended', call => {
-        console.log(`\tb ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
-        call.hangup()
+      }).on('ended', call2 => {
+        console.log(`\tb ${call2.id} state from ${call2.prevState} to ${call2.state}`, '\n')
+        call.hangup(); // hangup aleg too
         const msg = {msg: "call bleg ended"};
         ws.send(JSON.stringify(msg));
       })
