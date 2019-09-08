@@ -23,6 +23,7 @@ const RelayConsumer = SignalWire.RelayConsumer
 
 var ACTIVE_CALLS = new Array()
 var myClient;
+var myws;
 
 const consumer = new RelayConsumer({
   host: cfg.signalwireHost,
@@ -48,19 +49,89 @@ const consumer = new RelayConsumer({
   },
   onIncomingCall: async (call) => {
     console.log('Inbound call', call.id, call.from, call.to)
-    const answerResult = await call.answer()
-    if (!answerResult.successful) {
-      console.error('Answer Error')
-      return
+    // const answerResult = await call.answer()
+    // if (!answerResult.successful) {
+    //   console.error('Answer Error')
+    //   return
+    // }
+
+    const ws = myws;
+    // const connect_params = { type: 'phone', from: call.from, to: "+189900007773"};
+    const connect_params = { type: 'phone', from: "+189900007772", to:call.to.split('@')[0]};
+    // const domain = "dev-seven.sip.swire.io";
+    // const connect_params = { type: 'sip', params: {from: "1000@" + domain, to: "1002@" + domain, timeout: 30}};
+    console.log("connecting to", connect_params);
+
+    if (ws) {
+      const msg = {msg: "incoming call from " + call.from};
+      if (ws) ws.send(JSON.stringify(msg));
+
+      // todo wait for answer from client
     }
-    const collect = { initial_timeout: 10, digits: { max: 3, digit_timeout: 5 } }
-    const prompt = await call.promptTTS(collect, { text: 'Welcome at SignalWire! Please, enter your PIN' })
-    if (prompt.successful) {
-      await call.playTTS({ text: `You entered: ${prompt.result}. Thanks and good bye!` })
-    } else {
-      await call.playTTS({ text: 'Errors during prompt.' })
+
+    const { successful: connected, event: callEvent, call: call2 } = await call.connect(connect_params);
+
+    console.log("connected", connected);
+    console.log("event", callEvent);
+    console.log("call2", call2);
+
+    if (!connected) {
+      console.log("call failed", connect_params);
+      const msg = {msg: "call failed when connecting to " + connect_params.to};
+      if (ws) ws.send(JSON.stringify(msg));
+      call.hangup();
+      return;
     }
-    await call.hangup()
+
+    if (!call2) {
+      console.error("WTF?");
+      const msg = {msg: "call failed when connecting to " + connect_params.to};
+      if (ws) ws.send(JSON.stringify(msg));
+      call.hangup();
+      return;
+    }
+
+    // so far so good, bleg
+
+    {
+      const msg = {msg: "call bleg answered"};
+      ws.send(JSON.stringify(msg));
+    }
+
+    call2.on('created', call => {
+      console.log(`\tb ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
+    }).on('ringing', call => {
+      console.log(`\tb ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
+    }).on('answered', call => {
+      console.log(`\tb ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
+    }).on('ending', call => {
+      console.log(`\tb ${call.id} state from ${call.prevState} to ${call.state}`, '\n')
+    }).on('ended', call2 => {
+      console.log(`\tb ${call2.id} state from ${call2.prevState} to ${call2.state}`, '\n')
+      call.hangup(); // hangup aleg too
+      const msg = {msg: "call bleg ended"};
+      ws.send(JSON.stringify(msg));
+    })
+
+    call2.on('disconnected', call => {
+      console.log(`\tb ${call.id} has been disconnected!`, '\n')
+    }).on('connecting', call => {
+      console.log(`\tb ${call.id} trying to connecting..`, '\n')
+    }).on('connected', call => {
+      console.log(`\tb ${call.id} has been connected with ${call.peer.id}!`, '\n')
+    }).on('failed', call => {
+      console.log(`\tb ${call.id} failed to connect!`, '\n')
+    })
+
+    call2.on('record.recording', params => {
+      console.log(`\tb Record state changed for ${params.call_id} in ${params.state} - ${params.control_id}`)
+    }).on('record.paused', params => {
+      console.log(`\tb Record state changed for ${params.call_id} in ${params.state} - ${params.control_id}`)
+    }).on('record.finished', params => {
+      console.log(`\tb Record state changed for ${params.call_id} in ${params.state} - ${params.control_id}`)
+    }).on('record.no_input', params => {
+      console.log(`\tb Record state changed for ${params.call_id} in ${params.state} - ${params.control_id}`)
+    })
   }
 })
 
@@ -85,6 +156,8 @@ const WebSocket = require('ws');
 
 const wss = new WebSocket.Server({ port: cfg.websocketPort });
 wss.on('connection', function connection(ws, req) {
+  myws = ws; // remember me
+
   const ip = req.connection.remoteAddress;
   ws.on('message', function incoming(message) {
     console.log(message)
