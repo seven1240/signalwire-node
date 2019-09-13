@@ -7,6 +7,12 @@ npm install
 node .
 ```
 
+optionally, set `NODE_ENV`
+
+```
+export NODE_ENV=staging
+```
+
 
 # Agora Demo
 
