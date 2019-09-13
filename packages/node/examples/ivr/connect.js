@@ -5,7 +5,13 @@ var cfg = require('./config.'+ env);
 console.log("starting signalwire node ...")
 console.log(cfg)
 
-const { RelayClient } = require('../..')
+var signalwire_package = '@signalwire/node'
+
+if (cfg.signalwire_package) {
+  signalwire_package = cfg.signalwire_package // allow overwrite with '../..' on dev
+}
+
+const { RelayClient } = require(signalwire_package)
 
 const host = cfg.signalwireHost
 const project = cfg.signalwireProject
