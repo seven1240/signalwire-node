@@ -43,11 +43,8 @@ const consumer = new RelayConsumer({
     }
     const collect = {
       initial_timeout: 10,
-      speech: {
-        end_silence_timeout: 10,
-        hints: ["confidence_threshold=0.6"],
-        speech_hints: ["confidence_threshold=0.6"]
-      }
+      end_silence_timeout: 10,
+      speech_hints: ["confidence_threshold=0.6"]
     }
     const prompt = await call.promptTTS(collect, { text: 'Welcome at SignalWire! Please talk to me' })
     if (prompt.successful) {
